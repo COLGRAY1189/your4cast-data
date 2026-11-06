@@ -37,6 +37,8 @@ HEADERS = """\
   Cache-Control: public, max-age=300
 /frames/*
   Cache-Control: public, max-age=31536000, immutable
+/extended/*
+  Cache-Control: public, max-age=31536000, immutable
 """
 
 

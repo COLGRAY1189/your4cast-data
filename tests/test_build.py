@@ -81,6 +81,8 @@ def test_headers_cache_the_manifest_briefly_and_frames_for_a_year(tmp_path):
     h = (tmp_path / "_headers").read_text()
     assert "/manifest.json\n  Cache-Control: public, max-age=300" in h
     assert "/frames/*\n  Cache-Control: public, max-age=31536000, immutable" in h
+    # Tiles are named by their run too, so they never change either (seen live 2026-11-06: max-age=0 without this).
+    assert "/extended/*\n  Cache-Control: public, max-age=31536000, immutable" in h
 
 
 def test_same_runs_already_live_means_unchanged(tmp_path):
