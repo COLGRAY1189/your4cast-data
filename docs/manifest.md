@@ -48,6 +48,35 @@ Values beyond `min`/`max` were clamped when encoded. Wind PNGs are RGB: **u (tow
 north) in green**, blue 0, no alpha. Every other layer is an 8-bit grey PNG. Rain is the mean rate over the 3 or
 6 hours that end at the frame's time.
 
+## `extended`: days 11–15 (for the rewarded unlock)
+
+```json
+"extended": {
+  "run": "2026-11-06T00:00:00Z", "tileDeg": 10, "points": 40,
+  "steps": [216, 222, 228, …, 360], "fields": ["max", "min", "rain", "cloud"],
+  "tile": "extended/2026110600/{row}-{col}.png",
+  "scales": {"max": {"encoding": "linear", "min": -70, "max": 60, "unit": "°C"},
+             "min": {…same…}, "rain": {"encoding": "sqrt", "min": 0, "max": 200, "unit": "mm"},
+             "cloud": {"encoding": "linear", "min": 0, "max": 100, "unit": "%"}}
+}
+```
+
+- Always from the **full** run, never the short one: only 00 and 12 UTC runs reach 360 h.
+- **Which point, then which tile:** the nearest grid point, `Y = round((90 − lat) / 0.25)` (at most 719) and
+  `X = round((lon + 180) / 0.25) mod 1440`. Its tile is `row = Y div 40`, `col = X div 40` (rows 0–17, columns 0–35,
+  648 tiles), and inside it `y = Y − 40·row`, `x = X − 40·col`. The pole row (90° S) is not served.
+  - **Round, never floor.** On ECMWF's land-sea mask (2026-11-06), flooring put Cape Town on a sea point (land
+    0.00), whose 6-hourly highs barely move. The nearest point is land (0.98), and so were the nearest points for
+    Durban, London, Sydney, New York and Johannesburg.
+- **Inside a tile:** one 8-bit grey PNG, 40 wide by 40 × 25 × 4 = 4000 tall. For step index `i` (0 for 216 …
+  24 for 360) and field `f` (0 max, 1 min, 2 rain, 3 cloud), the value is at pixel `(x, 40·(i·4 + f) + y)`.
+- **What a step means:** step `s` covers the 6 hours before run + `s` h, so the 25 steps cover run + 210 h to
+  run + 360 h. `max` and `min` are the highest and lowest 2 m temperature in those 6 hours (ECMWF `mx2t6`,
+  `mn2t6`), `rain` is the precipitation total in them in mm, and `cloud` is cloud cover at run + `s` h.
+- **A local day** is the 6-hour intervals inside it: max of `max`, min of `min`, sum of `rain`, mean of `cloud`.
+  Show a day only when the intervals cover all of it. Far west of UTC, day 15 can end after run + 360 h, and then
+  only days 11–14 are shown.
+
 ## Caching and updates
 - `manifest.json` is served with `Cache-Control: public, max-age=300`; frames with
   `public, max-age=31536000, immutable`. A frame's bytes never change under its name.

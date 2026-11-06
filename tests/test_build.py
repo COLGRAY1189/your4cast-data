@@ -7,11 +7,16 @@ import numpy as np
 import pytest
 from PIL import Image
 
+from concurrent.futures import ThreadPoolExecutor
+
 from y4cdata import __main__ as cli
-from y4cdata.build import build, read_published
+from y4cdata.build import build, read_published, write_extended
 from y4cdata.encode import SCALES, from_bytes
+from y4cdata.extended import BASE_STEP, EXTENDED_STEPS
 from y4cdata.index import FIELDS
 from y4cdata.runs import Run
+
+ALL_PARAMS = FIELDS + ("mx2t6", "mn2t6")
 
 FULL, SHORT = Run(datetime(2026, 11, 6, 0, tzinfo=UTC)), Run(datetime(2026, 11, 6, 6, tzinfo=UTC))
 NOW = datetime(2026, 11, 6, 20, tzinfo=UTC)
@@ -31,16 +36,20 @@ class FakeSource:
     def get(self, path, byte_range=None):
         self.gets.append(path)
         if path.endswith(".index"):
-            recs = [{"param": p, "levtype": "sfc", "_offset": i * 100, "_length": 100} for i, p in enumerate(FIELDS)]
+            recs = [{"param": p, "levtype": "sfc", "_offset": i * 100, "_length": 100}
+                    for i, p in enumerate(ALL_PARAMS)]
             return "\n".join(json.dumps(r) for r in recs).encode()
         step = int(path.split("-")[1].rstrip("h"))  # ".../20261106000000-24h-oper-fc.grib2"
-        return json.dumps({"param": FIELDS[byte_range[0] // 100], "step": step}).encode()
+        return json.dumps({"param": ALL_PARAMS[byte_range[0] // 100], "step": step}).encode()
 
 
-def fake_decode(message):
+VALUES = {"10u": 5.0, "10v": -5.0, "2t": 293.15, "tcc": 0.5, "mx2t6": 300.15, "mn2t6": 280.15}
+
+
+def fake_decode(message, shape=(4, 8)):
     d = json.loads(message)
-    value = {"10u": 5.0, "10v": -5.0, "2t": 293.15, "tp": 0.001 * d["step"], "tcc": 0.5}[d["param"]]
-    return np.full((4, 8), value, dtype=np.float32)
+    value = 0.001 * d["step"] if d["param"] == "tp" else VALUES[d["param"]]
+    return np.full(shape, value, dtype=np.float32)
 
 
 def test_build_writes_every_frame_and_the_manifest(tmp_path):
@@ -85,7 +94,24 @@ def test_each_step_fetches_its_index_once(tmp_path):
     source = FakeSource()
     build(source, NOW, tmp_path, None, decode=fake_decode)
     indexes = [p for p in source.gets if p.endswith(".index")]
-    assert len(indexes) == len(set(indexes)) == len(FULL.map_steps()) + len(SHORT.map_steps())
+    extended_only = [s for s in [BASE_STEP] + EXTENDED_STEPS if s not in FULL.map_steps()]
+    assert extended_only == list(range(246, 361, 6))  # 210..240 are map steps too (150 + 6k)
+    assert len(indexes) == len(set(indexes)) == len(FULL.map_steps()) + len(SHORT.map_steps()) + 20
+
+
+def test_the_manifest_points_at_the_full_runs_tiles(tmp_path):
+    build(FakeSource(), NOW, tmp_path, None, decode=fake_decode)
+    m = json.loads((tmp_path / "manifest.json").read_text())
+    assert m["extended"]["run"] == "2026-11-06T00:00:00Z"
+    assert m["extended"]["tile"] == "extended/2026110600/{row}-{col}.png"
+
+
+def test_a_full_grid_makes_648_tiles(tmp_path):
+    with ThreadPoolExecutor(4) as pool:
+        write_extended(FakeSource(), FULL, tmp_path, lambda m: fake_decode(m, (721, 1440)), pool, {})
+    tiles = list((tmp_path / "extended" / "2026110600").glob("*.png"))
+    assert len(tiles) == 648
+    assert (tmp_path / "extended/2026110600/12-19.png").is_file()  # Cape Town's tile
 
 
 class Answer(io.BytesIO):

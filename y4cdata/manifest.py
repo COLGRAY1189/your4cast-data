@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 
 from y4cdata.encode import SCALES
+from y4cdata.extended import extended_block
 from y4cdata.grib import HEIGHT, WIDTH
 from y4cdata.runs import Run
 
@@ -63,4 +64,5 @@ def build_manifest(frames: list[Frame], full: Run, short: Run | None, generated:
             {"time": _iso(f.time)} | {layer: file_name(run, layer, step) for layer, (run, step) in f.sources.items()}
             for f in frames
         ],
+        "extended": extended_block(full),
     }

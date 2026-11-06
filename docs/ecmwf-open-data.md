@@ -58,6 +58,10 @@ is about 100 MB with 191–194 messages; the five fields this job needs are abou
 | `2t` | 2 m temperature | K | 9 |
 | `tp` | total precipitation, accumulated from step 0 | m | 12 |
 | `tcc` | total cloud cover | 0–1 | 7 |
+| `mx2t6`, `mn2t6` | highest / lowest 2 m temperature in the 6 hours before the step; present only on the 6-hourly steps (150 h on; seen at 150 h in the 2026-11-06 00 UTC index) | K | — |
+
+The days 11–15 tiles use `mx2t6`, `mn2t6`, `tp` and `tcc` at steps 216–360 (and `tp` at 210); see
+`docs/manifest.md`.
 
 Also present and unused for now: `msl` (pressure), `2d` (dewpoint, for humidity), `tprate`, `ptype`, `100u/100v`.
 
