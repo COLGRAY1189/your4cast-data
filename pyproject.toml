@@ -1,0 +1,9 @@
+[project]
+name = "your4cast-data"
+version = "0.1.0"
+description = "Map-layer data for the Your4cast weather app, made from ECMWF open data (CC BY 4.0)"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
