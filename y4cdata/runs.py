@@ -49,7 +49,7 @@ class Run:
     def map_steps(self, horizon: int = MAP_HORIZON_H) -> list[int]:
         """The run's steps up to ``horizon`` hours: every 3 h to 144 h, every 6 h after."""
         last = min(horizon, self.last_step)
-        return [s for s in range(0, min(last, 144) + 1, 3)] + list(range(150, last + 1, 6))
+        return list(range(0, min(last, 144) + 1, 3)) + list(range(150, last + 1, 6))
 
     def path(self, step: int, ext: str) -> str:
         """The file's path below a data root, e.g. ``20261106/00z/ifs/0p25/oper/20261106000000-24h-oper-fc.index``."""
