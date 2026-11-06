@@ -16,6 +16,10 @@ from `y4cdata/build.py`.
 Wrangler 4.158.0 (pinned in the workflow), with two GitHub Actions secrets: `CLOUDFLARE_API_TOKEN` and
 `CLOUDFLARE_ACCOUNT_ID`.
 
+The project was created by the first deploy (run 42206466786, 2026-11-06). In Wrangler 4.158.0 `--json` prints
+each project as `"Project Name": "<name>"` (`packages/wrangler/src/pages/projects.ts`), which is what the
+workflow's `grep -q '"your4cast-data"'` matches.
+
 ```
 npx wrangler pages project list --json               # does the project exist?
 npx wrangler pages project create your4cast-data --production-branch main
@@ -29,7 +33,7 @@ repository variable `MANIFEST_URL`.
 ## Limits that matter (Free plan)
 | Limit | Value | This job |
 |---|---|---|
-| Files per site | 20,000 | about 260 per run pair (4 layers × up to 96 steps), plus `manifest.json` and `_headers` |
+| Files per site | 20,000 | 259 frames from a full run alone (65 steps × 4 layers, no rain at step 0); 382 with a short run as well (96 steps); plus `manifest.json` and `_headers`. The first deploy uploaded 260 files |
 | Size per file | 25 MiB | largest PNG about 0.73 MB (wind) |
 | Builds per month | 500 | at most 4 deploys a day (one per new ECMWF run), about 120 a month |
 | Static asset requests | "free and unlimited" on free and paid plans | everything served is static |

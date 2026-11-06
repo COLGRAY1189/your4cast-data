@@ -28,8 +28,9 @@ python -m venv .venv
 .venv/bin/python -m y4cdata --out site --status-file status.txt
 ```
 
-A full build downloads about 260 MB of selected fields from ECMWF (byte ranges, at most 4 at a time) and writes
-about 110 MB of PNGs.
+A full run alone (65 steps) downloads about 175 MB of selected fields from ECMWF (byte ranges, at most 4 at a
+time) and writes 109 MB of PNGs (measured 2026-11-06). With a newer short run as well (31 more steps), expect about
+260 MB down and 160 MB written.
 
 ## Schedule
 - `build.yml`: every hour at :17 UTC, and by hand. It deploys only when a newer complete run exists. A failed run
