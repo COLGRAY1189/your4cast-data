@@ -45,7 +45,11 @@ repository variable `MANIFEST_URL`.
   Cache-Control: public, max-age=300
 /frames/*
   Cache-Control: public, max-age=31536000, immutable
+/extended/*
+  Cache-Control: public, max-age=31536000, immutable
 ```
+Without the third rule the days 11–15 tiles were served `public, max-age=0, must-revalidate` (Pages' default, seen
+2026-11-06).
 A splat (`*`) "will greedily match all characters" (Cloudflare's `_headers` docs), so `/frames/*` covers every
 frame. Frame names contain their run and step, so their bytes never change.
 

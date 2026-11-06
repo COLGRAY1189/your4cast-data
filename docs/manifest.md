@@ -78,8 +78,8 @@ north) in green**, blue 0, no alpha. Every other layer is an 8-bit grey PNG. Rai
   only days 11–14 are shown.
 
 ## Caching and updates
-- `manifest.json` is served with `Cache-Control: public, max-age=300`; frames with
-  `public, max-age=31536000, immutable`. A frame's bytes never change under its name.
+- `manifest.json` is served with `Cache-Control: public, max-age=300`; frames and days 11–15 tiles with
+  `public, max-age=31536000, immutable`. Their bytes never change under their names (each name carries its run).
 - **On any 404 for a frame, fetch `manifest.json` again**: a new run was published and the old frames were
   replaced. Every frame of the current full run stays in each deploy, so a manifest a few hours old usually still
   works.
