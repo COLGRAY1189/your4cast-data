@@ -17,6 +17,16 @@ Checked 2026-11-06 against ECMWF's own pages and real files. Code: `y4cdata/runs
 | `https://d2zvc0wgha4k2l.cloudfront.net` | The AWS mirror's CloudFront distribution, listed on the registry page. Serves byte ranges (206). |
 | `https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com` | The S3 bucket itself. On 2026-11-06 most requests got `503 SlowDown`, so it is last. |
 
+On 2026-11-06 around 09:30 UTC both mirror hosts answered `503 SlowDown` to every request for minutes on end
+(CloudFront: "Error from cloudfront" with the S3 SlowDown body). Meanwhile the portal served all 390 requests of a
+full build (65 steps: one index and five fields each) in 469 s. The mirror is a fallback, not a second main
+source.
+
+**Running the job on the owner's laptop:** Python there cannot verify the portal (see above), so point it at
+Mozilla's root list for that one process. Node ships the same list as Linux and certifi:
+`node -e "process.stdout.write(require('tls').rootCertificates.join('\n')+'\n')" > roots.pem`, then set
+`SSL_CERT_FILE=roots.pem`. No system setting changes. CI needs none of this.
+
 ## Paths
 `{root}/{yyyymmdd}/{HH}z/ifs/0p25/oper/{yyyymmdd}{HH}0000-{step}h-oper-fc.{grib2|index}`
 
